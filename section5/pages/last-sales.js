@@ -1,14 +1,12 @@
 import { useState, useEffect } from "react";
 import useSWR from "swr";
 
-function LastSalesPage() {
-    const [sales, setSales] = useState();
+function LastSalesPage(props) {
+    //초기에는 사전에 페치된 props.sales 그이후에 SWR로 클라이언트 사이드에서 ㅔ칭
+  const [sales, setSales] = useState(props.sales);
   //   const [isLoading, setIsLoading] = useState(false);
 
-  const { data, error } = useSWR(
-    "https://nextjs-course-19f7b-default-rtdb.firebaseio.com/sales.json"
-  );
-
+  const { data, error } = useSWR("https://nextjs-course-19f7b-default-rtdb.firebaseio.com/sales.json", (url) => fetch(url).then(res => res.json()))
   useEffect(() => {
     if (data) {
       const transformedSales = [];
@@ -46,7 +44,8 @@ function LastSalesPage() {
   if (error) {
     return <p>Failed to load.</p>;
   }
-  if (!data || !sales) {
+  //sales가 이미 있으므로 &&
+  if (!data && !sales) {
     return <p>Loading..</p>;
   }
 
@@ -65,5 +64,19 @@ function LastSalesPage() {
       ))}
     </ul>
   );
+}
+export async function getStaticProps() {
+   const response = await fetch("https://nextjs-course-19f7b-default-rtdb.firebaseio.com/sales.json")
+   const data = await response.json();
+      const transformedSales = [];
+      for (const key in data) {
+        transformedSales.push({
+          id: key,
+          username: data[key].username,
+          volume: data[key].volume,
+        });
+      }
+
+      return { props: { sales: transformedSales } };
 }
 export default LastSalesPage;
