@@ -3,7 +3,11 @@ import NextAuth from "next-auth/next";
 import { verifyPassword } from "@/lib/auth";
 import CredentialsProvider  from "next-auth/providers/credentials";
 
+
 export default NextAuth({
+  session: {
+    strategy: "jwt",
+  },
   providers: [
     CredentialsProvider({
       async authorize(credentials) {
@@ -16,7 +20,6 @@ export default NextAuth({
         if (!user) {
           throw new Error('No user found!');
         }
-        console.log(credentials.password,user.password);
         const isValid = await verifyPassword(credentials.password, user.password);
 
         if (!isValid) {
@@ -28,7 +31,5 @@ export default NextAuth({
       }
     })
   ],
-  session: {
-    jwt: true
-  },
+  
 });
