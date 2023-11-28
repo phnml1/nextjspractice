@@ -1,21 +1,8 @@
+import { MongoClient } from 'mongodb';
+
 import MeetupList from '../components/meetups/MeetupList';
 
-const DUMMY_MEETUPS = [
-  {
-    id: 'm1',
-    title: 'A First Meetup',
-    image: '',
-    address: 'Some address 5, 12345 some city',
-    description:'This is a first meetup!'
-  },
-  {
-    id: 'm2',
-    title: 'A Second Meetup',
-    image: '',
-    address: 'Some address 10, 12345 some city',
-    description:'This is a second meetup!'
-  },
-]
+
 
 function HomePage(props) {
   
@@ -35,9 +22,23 @@ function HomePage(props) {
 // 빌드 프로세스시에만 실행되는 코드(revalidate없을 시)
 export async function getStaticProps() {
   // fetch data from an API
+
+  const client = await MongoClient.connect('mongodb+srv://yuju0903:qwer1234@cluster0.usugtsx.mongodb.net/meetup?retryWrites=true&w=majority')
+  
+  const db = client.db();
+
+  const meetupsCollection = db.collection('meetups');
+
+  const meetups = await meetupsCollection.find().toArray();
+  client.close();
   return {
     props: {
-      meetups: DUMMY_MEETUPS
+      meetups: meetups.map(meetup => ({
+        title: meetup.title,
+        address: meetup.address,
+        image: meetup.image,
+        id: meetup._id.toString(),
+      }))
     },
     revalidate: 1
   };

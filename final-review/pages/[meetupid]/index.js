@@ -1,47 +1,60 @@
 import { Fragment } from "react";
 import MeetupDetail from '@/components/meetups/MeetupDetail';
-
-function MeetupDetails() {
+import { MongoClient, ObjectId } from 'mongodb';
+function MeetupDetails(props) {
   return (
     <>
-    <MeetupDetail />
+    <MeetupDetail image = {props.meetupData.image} title = {props.meetupData.title} address = {props.meetupData.address} description = {props.meetupData.description}/>
     <Fragment>
     </Fragment>
     </>
   )
 }
 
-export function getStaticPaths() {
+export async function getStaticPaths() {
+  const client = await MongoClient.connect('mongodb+srv://yuju0903:<password>@cluster0.usugtsx.mongodb.net/meetup?retryWrites=true&w=majority')
+  
+  const db = client.db();
+
+  const meetupsCollection = db.collection('meetups');
+  // id만 가져옴 (첫번째 매개변수는 조건, 두번째는 포함하는 필드)
+  const meetups = await meetupsCollection.find({}, { _id: 1 }).toArray();
+  client.close();
   return {
     // 지원하는 매개변수 값이 모두 있는지(false) 혹은 일부만 있는지(true)
     // 방문이 잦은 페이지만 사전렌더링 되도록 만들기 가능
     fallback: false,
-    // 보통은 하드코딩x
-    paths: [
-      { params: {
-        meetupid: 'm1'
-      } 
-    },
-    {
-    params: {
-      meetupid: 'm2'
-    }
-  },
-    ]
-  }
+    // 
+    paths: meetups.map((meetup) => ({
+      params: {meetupid: meetup._id.toString()},
+  })),
+  };
 }
 export async function getStaticProps(context) {
   
   const meetupId = context.params.meetupid;
 
+  const client = await MongoClient.connect(
+    'mongodb+srv://yuju0903:<password>@cluster0.usugtsx.mongodb.net/meetup?retryWrites=true&w=majority'
+  );
+  const db = client.db();
+
+  const meetupsCollection = db.collection('meetups');
+
+  const selectedMeetup = await meetupsCollection.findOne({
+    _id: new ObjectId(meetupId),
+  });
+
+  client.close();
+
   return {
     props: {
       meetupData: {
-        image: '',
-        id: meetupId,
-        title : "First MeetUp",
-        address: "Some Street 5, Some city",
-        description: "this is a first meetup"
+        image: selectedMeetup.image,
+        id: selectedMeetup._id.toString(),
+        title : selectedMeetup.title,
+        address: selectedMeetup.address,
+        description: selectedMeetup.description,
       }
     }
   }
