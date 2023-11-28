@@ -1,13 +1,18 @@
 import { Fragment } from "react";
 import MeetupDetail from '@/components/meetups/MeetupDetail';
 import { MongoClient, ObjectId } from 'mongodb';
+import Head from "next/head";
 function MeetupDetails(props) {
   return (
-    <>
-    <MeetupDetail image = {props.meetupData.image} title = {props.meetupData.title} address = {props.meetupData.address} description = {props.meetupData.description}/>
     <Fragment>
+      <Head>
+      <title>{props.meetupData.title}</title>
+      <meta name = "description"
+      content = {props.meetupData.description} />
+    </Head>
+    <MeetupDetail image = {props.meetupData.image} title = {props.meetupData.title} address = {props.meetupData.address} description = {props.meetupData.description}/>
+    
     </Fragment>
-    </>
   )
 }
 
@@ -23,7 +28,8 @@ export async function getStaticPaths() {
   return {
     // 지원하는 매개변수 값이 모두 있는지(false) 혹은 일부만 있는지(true)
     // 방문이 잦은 페이지만 사전렌더링 되도록 만들기 가능
-    fallback: false,
+    //true(즉시 빈페이지 생성하고 데이터)나 blocking이면 (그전에 아무것도 보지못하다가 완성된 페이지로)
+    fallback: 'blocking',
     // 
     paths: meetups.map((meetup) => ({
       params: {meetupid: meetup._id.toString()},
